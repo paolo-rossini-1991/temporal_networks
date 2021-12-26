@@ -63,8 +63,6 @@ def plotDegree(degree_dict, node):
     ax.plot(list(individual_degree.keys()), list([item[0] for item in list(individual_degree.values())]))
     ax.plot(list(individual_degree.keys()), list([item[1] for item in list(individual_degree.values())]))
     plt.show()
-    print(correspondence_per_year)
-
 
 def individualCorrespondents(edge_list, node):
 

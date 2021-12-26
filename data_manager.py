@@ -30,16 +30,20 @@ class Edge:
         return self.__year
 
     def isReciprocal(self, edge):
-        return self.__source == edge.getTarget() and self.__target == edge.getSource()
+        return self.__source == edge.getTarget() and self.__target == edge.getSource() and self.__year == edge.getYear()
 
     def isEqual(self, edge):
         return self.__source == edge.getSource() and self.__target == edge.getTarget() and self.__year == edge.getYear()
+
+    def hasNode(self, node):
+        return self.__source == node or self.__target == node
 
     def print(self):
         print(['Edge #', self.__id])
         print(self.__source)
         print(self.__target)
         print(self.__year)
+
 
 
 def plotDegree(degree_dict, node):
@@ -59,6 +63,39 @@ def plotDegree(degree_dict, node):
     ax.plot(list(individual_degree.keys()), list([item[0] for item in list(individual_degree.values())]))
     ax.plot(list(individual_degree.keys()), list([item[1] for item in list(individual_degree.values())]))
     plt.show()
+
+def individualCorrespondents(edge_list, node):
+
+    individual_correspondents = dict()
+
+    for edge in edge_list:
+        check = True
+        if edge.hasNode(node):
+            if edge.getYear() in individual_correspondents:
+                for edge_check in list(individual_correspondents[edge.getYear()].keys()):
+                    if edge.isEqual(edge_check) or edge.isReciprocal(edge_check):
+                        check = False
+                        individual_correspondents[edge.getYear()][edge_check] += 1
+                    if check:
+                        individual_correspondents[edge.getYear()].update({edge: 1})
+            else:
+                individual_correspondents[edge.getYear()] = {edge: 1}
+
+    return individual_correspondents
+
+def correspondencePerYear(individual_correspondents, node1, node2):
+    year_list = np.array(list(individual_correspondents))
+    correspondence_per_year = dict()
+    for year in range(year_list.min(), year_list.max()):
+        correspondence_per_year[year] = 0
+        if year in individual_correspondents:
+            for edge in list(individual_correspondents[year].keys()):
+                edge_check = Edge(node1, node2, 0, year)
+                if edge_check.isEqual(edge) or edge_check.isReciprocal(edge):
+                    correspondence_per_year[year] = individual_correspondents[year][edge]
+
+    print(correspondence_per_year)
+
 
 
 if __name__ == '__main__':
@@ -107,8 +144,6 @@ if __name__ == '__main__':
                     temp.update({edge.getTarget(): [0, 1]})
         degree_per_year[year] = temp
 
-    print(degree_per_year)
-
     # edges_per_year
     fig, ax = matplotlib.pyplot.subplots()
     ax.plot(list(edges_per_year.keys()), list(edges_per_year.values()))
@@ -121,4 +156,7 @@ if __name__ == '__main__':
     fig, ax = matplotlib.pyplot.subplots()
     ax.plot(list(nodes_per_year.keys()), list(nodes_per_year.values()))
 
-    plotDegree(degree_dict=degree_per_year, node=27)
+    # plotDegree(degree_dict=degree_per_year, node=27)
+
+    individual_correspondents = individualCorrespondents(edge_list=edge_list, node=27)
+    correspondencePerYear(individual_correspondents, node1=27, node2=56)

@@ -59,13 +59,23 @@ def plotDegree(degree_dict, node):
         else:
             individual_degree[i] = [0, 0]
 
+    received_letters = list([item[0] for item in list(individual_degree.values())])
+    sent_letters = list([item[1] for item in list(individual_degree.values())])
+
     fig, ax = matplotlib.pyplot.subplots()
-    ax.plot(list(individual_degree.keys()), list([item[0] for item in list(individual_degree.values())]))
-    ax.plot(list(individual_degree.keys()), list([item[1] for item in list(individual_degree.values())]))
-    plt.show()
+    ax.bar(list(individual_degree.keys()), received_letters, label='Sent')
+    ax.bar(list(individual_degree.keys()), sent_letters, bottom=received_letters, color='orange', label='Received')
+    plt.ylabel('Number of letters')
+    plt.xlabel('Year')
+    plt.title('Descartes: Letters vs Year')
+    ax.legend()
 
 def individualCorrespondents(edge_list, node):
-
+    '''
+    :param edge_list:
+    :param node:
+    :return: create a dictionary with the following form {int year: {Edge edge: int occurrence}}
+    '''
     individual_correspondents = dict()
 
     for edge in edge_list:
@@ -94,20 +104,24 @@ def correspondencePerYear(individual_correspondents, node1, node2):
                 if edge_check.isEqual(edge) or edge_check.isReciprocal(edge):
                     correspondence_per_year[year] = individual_correspondents[year][edge]
 
-    print(correspondence_per_year)
-
+    return correspondence_per_year
 
 
 if __name__ == '__main__':
     # get current working directory
     cwd = os.getcwd()
 
-    # read csv
+    # read csv using pandas
     df = pandas.read_csv(cwd + '/data/Edges_Dynamic_Gephi.csv', sep=';')
 
+    #### edges per year ####
+    # extract 'years' vector from csv. the vector has n elements with n being the number of edges.
     years = np.array(df['onset'])
 
     edges_per_year = dict()
+    # for each year, fill edges_per_year dictionary adding a pair made by:
+    # key -> year
+    # value -> number of occurrences of the selected year in 'years'
     for i in range(years.min(), years.max()+1):
         edges_per_year[i] = np.count_nonzero(years == i)
 
@@ -116,11 +130,17 @@ if __name__ == '__main__':
         if edges_per_year[key] > 0:
             year_list.append(key)
 
+    # create a list of Edge extracting 'source', 'target', 'id' and 'year' information from the csv
     edge_list = list()
     for i in range(len(df['source'])):
         edge = Edge(int(df[i:i + 1]['source']), int(df[i:i + 1]['target']), int(df[i:i + 1]['edge.id']), int(df[i:i + 1]['onset']))
         edge_list.append(edge)
 
+    #### degree per year ####
+    # for each year, fill degree_per_year dictionary adding a pair made by:
+    # key -> year
+    # value -> pair : key -> node
+    #                 value -> list(num_sources, num_targets)
     degree_per_year = dict()
     for year in year_list:
         temp = dict()
@@ -143,20 +163,43 @@ if __name__ == '__main__':
                 else:
                     temp.update({edge.getTarget(): [0, 1]})
         degree_per_year[year] = temp
+    print(degree_per_year)
+    #degree_per_year[1619][27]
 
-    # edges_per_year
-    fig, ax = matplotlib.pyplot.subplots()
-    ax.plot(list(edges_per_year.keys()), list(edges_per_year.values()))
 
-    # nodes_per_year
+    # node_per_year
     nodes_per_year = dict()
     for key in degree_per_year:
         nodes_per_year[key] = len(degree_per_year[key])
 
-    fig, ax = matplotlib.pyplot.subplots()
-    ax.plot(list(nodes_per_year.keys()), list(nodes_per_year.values()))
+    fig, ax1 = matplotlib.pyplot.subplots()
+    ax1.plot(list(nodes_per_year.keys()), list(nodes_per_year.values()), label='Nodes')
+    ax1.set_ylabel('Nodes')
+    ax2 = ax1.twinx()
+    ax2.plot(list(edges_per_year.keys()), list(edges_per_year.values()), color='orange', label='Edges')
+    ax2.set_ylabel('Edges')
+    ax1.set_xlabel('Year')
+    plt.title('Nodes and Edges vs Year')
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    lines= lines1 + lines2
+    labels = labels1 + labels2
+    ax1.legend(lines, labels)
 
-    # plotDegree(degree_dict=degree_per_year, node=27)
+    print(nodes_per_year)
+    print(edges_per_year)
+
+    plotDegree(degree_dict=degree_per_year, node=27)
 
     individual_correspondents = individualCorrespondents(edge_list=edge_list, node=27)
-    correspondencePerYear(individual_correspondents, node1=27, node2=56)
+    print(individual_correspondents)
+
+    correspondence_per_year_27_56 = correspondencePerYear(individual_correspondents, node1=27, node2=56)
+    correspondence_per_year_27_53 = correspondencePerYear(individual_correspondents, node1=27, node2=53)
+
+    #fig, ax = matplotlib.pyplot.subplots()
+    #ax.plot(list(correspondence_per_year_27_56.keys()), list(correspondence_per_year_27_56.values()))
+    #fig, ax = matplotlib.pyplot.subplots()
+    #ax.plot(list(correspondence_per_year_27_53.keys()), list(correspondence_per_year_27_53.values()))
+
+    plt.show()

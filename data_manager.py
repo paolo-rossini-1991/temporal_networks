@@ -193,6 +193,7 @@ if __name__ == '__main__':
 
     individual_correspondents = individualCorrespondents(edge_list=edge_list, node=27)
     print(individual_correspondents)
+    print(edge_list)
 
     correspondence_per_year_27_56 = correspondencePerYear(individual_correspondents, node1=27, node2=56)
     correspondence_per_year_27_53 = correspondencePerYear(individual_correspondents, node1=27, node2=53)

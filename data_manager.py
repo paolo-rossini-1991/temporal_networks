@@ -48,8 +48,6 @@ class Edge:
         return str(self.__source) + "-" + str(self.__target)
 
 
-
-
 def plotDegree(degree_dict, node):
     years = np.array(list(degree_dict.keys()))
 
@@ -86,12 +84,17 @@ def individualCorrespondents(edge_list, node):
         check = True
         if edge.hasNode(node):
             if edge.getYear() in individual_correspondents:
+                dummy_edge = Edge(0,0,0,0)
                 for edge_check in list(individual_correspondents[edge.getYear()].keys()):
                     if edge.isEqual(edge_check) or edge.isReciprocal(edge_check):
+                        dummy_edge = edge_check
                         check = False
-                        individual_correspondents[edge.getYear()][edge_check] += 1
-                    if check:
-                        individual_correspondents[edge.getYear()].update({edge: 1})
+                        break
+                if check:
+                    individual_correspondents[edge.getYear()].update({edge: 1})
+                else:
+                    individual_correspondents[edge.getYear()][dummy_edge] += 1
+
             else:
                 individual_correspondents[edge.getYear()] = {edge: 1}
 

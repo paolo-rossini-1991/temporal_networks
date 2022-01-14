@@ -44,6 +44,10 @@ class Edge:
         print(self.__target)
         print(self.__year)
 
+    def __repr__(self):
+        return str(self.__source) + "-" + str(self.__target)
+
+
 
 
 def plotDegree(degree_dict, node):
@@ -59,12 +63,13 @@ def plotDegree(degree_dict, node):
         else:
             individual_degree[i] = [0, 0]
 
-    received_letters = list([item[0] for item in list(individual_degree.values())])
-    sent_letters = list([item[1] for item in list(individual_degree.values())])
+    print(individual_degree)
 
+    sent_letters = list([item[0] for item in list(individual_degree.values())])
+    received_letters = list([item[1] for item in list(individual_degree.values())])
     fig, ax = matplotlib.pyplot.subplots()
-    ax.bar(list(individual_degree.keys()), received_letters, label='Sent')
-    ax.bar(list(individual_degree.keys()), sent_letters, bottom=received_letters, color='orange', label='Received')
+    ax.bar(list(individual_degree.keys()), sent_letters, label='Sent')
+    ax.bar(list(individual_degree.keys()), received_letters, bottom=sent_letters, color='orange', label='Received')
     plt.ylabel('Number of letters')
     plt.xlabel('Year')
     plt.title('Descartes: Letters vs Year')
@@ -77,7 +82,6 @@ def individualCorrespondents(edge_list, node):
     :return: create a dictionary with the following form {int year: {Edge edge: int occurrence}}
     '''
     individual_correspondents = dict()
-
     for edge in edge_list:
         check = True
         if edge.hasNode(node):
@@ -105,7 +109,6 @@ def correspondencePerYear(individual_correspondents, node1, node2):
                     correspondence_per_year[year] = individual_correspondents[year][edge]
 
     return correspondence_per_year
-
 
 if __name__ == '__main__':
     # get current working directory
@@ -163,14 +166,14 @@ if __name__ == '__main__':
                 else:
                     temp.update({edge.getTarget(): [0, 1]})
         degree_per_year[year] = temp
-    print(degree_per_year)
-    #degree_per_year[1619][27]
 
-
-    # node_per_year
+    # nodes_per_year
     nodes_per_year = dict()
-    for key in degree_per_year:
-        nodes_per_year[key] = len(degree_per_year[key])
+    for year in range(years.min(), years.max()+1):
+        if year in degree_per_year:
+            nodes_per_year[year] = len(degree_per_year[year])
+        else:
+            nodes_per_year[year] = 0
 
     fig, ax1 = matplotlib.pyplot.subplots()
     ax1.plot(list(nodes_per_year.keys()), list(nodes_per_year.values()), label='Nodes')
@@ -186,21 +189,34 @@ if __name__ == '__main__':
     labels = labels1 + labels2
     ax1.legend(lines, labels)
 
-    print(nodes_per_year)
-    print(edges_per_year)
-
     plotDegree(degree_dict=degree_per_year, node=27)
 
     individual_correspondents = individualCorrespondents(edge_list=edge_list, node=27)
+
     print(individual_correspondents)
     print(edge_list)
 
+    dictionary_counter = dict()
+    for year in individual_correspondents:
+        dictionary_counter[year] = 0
+        for edge in list(individual_correspondents[year].keys()):
+            if edge.hasNode(27):
+                dictionary_counter[year] += 1
+    #print(dictionary_counter)
+
+    for year, node in degree_per_year.items():
+        for key in node:
+            correspondence_per_year = correspondencePerYear(individual_correspondents, node1=27, node2=key)
+            print('27-', key, ':', " ", sum(correspondence_per_year.values()), sep="")
+
     correspondence_per_year_27_56 = correspondencePerYear(individual_correspondents, node1=27, node2=56)
-    correspondence_per_year_27_53 = correspondencePerYear(individual_correspondents, node1=27, node2=53)
+    print(correspondence_per_year_27_56)
+    print(sum(correspondence_per_year_27_56.values()))
+    print(individual_correspondents)
 
     #fig, ax = matplotlib.pyplot.subplots()
     #ax.plot(list(correspondence_per_year_27_56.keys()), list(correspondence_per_year_27_56.values()))
     #fig, ax = matplotlib.pyplot.subplots()
     #ax.plot(list(correspondence_per_year_27_53.keys()), list(correspondence_per_year_27_53.values()))
 
-    plt.show()
+    #plt.show()

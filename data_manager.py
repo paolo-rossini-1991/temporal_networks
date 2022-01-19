@@ -103,7 +103,7 @@ def individualCorrespondents(edge_list, node):
 def correspondencePerYear(individual_correspondents, node1, node2):
     year_list = np.array(list(individual_correspondents))
     correspondence_per_year = dict()
-    for year in range(year_list.min(), year_list.max()):
+    for year in range(year_list.min(), year_list.max()+1):
         correspondence_per_year[year] = 0
         if year in individual_correspondents:
             for edge in list(individual_correspondents[year].keys()):
@@ -195,31 +195,65 @@ if __name__ == '__main__':
     plotDegree(degree_dict=degree_per_year, node=27)
 
     individual_correspondents = individualCorrespondents(edge_list=edge_list, node=27)
-
     print(individual_correspondents)
-    print(edge_list)
 
-    dictionary_counter = dict()
-    for year in individual_correspondents:
-        dictionary_counter[year] = 0
-        for edge in list(individual_correspondents[year].keys()):
-            if edge.hasNode(27):
-                dictionary_counter[year] += 1
-    #print(dictionary_counter)
+    correspondents_per_year = dict()
+    for year in range(years.min(), years.max()+1):
+        if year in individual_correspondents:
+            correspondents_per_year[year] = 0
+            for edge in list(individual_correspondents[year].keys()):
+                correspondents_per_year[year] += 1
+        else:
+            correspondents_per_year[year]= 0
+    print(correspondents_per_year)
 
+    fig, ax = matplotlib.pyplot.subplots()
+    ax.plot(list(correspondents_per_year.keys()), list(correspondents_per_year.values()))
+
+    correspondence_per_year = dict()
     for year, node in degree_per_year.items():
         for key in node:
-            correspondence_per_year = correspondencePerYear(individual_correspondents, node1=27, node2=key)
-            print('27-', key, ':', " ", sum(correspondence_per_year.values()), sep="")
+            if key != 27:
+                correspondence_per_year[key] = correspondencePerYear(individual_correspondents, node1=27, node2=key)
 
-    correspondence_per_year_27_56 = correspondencePerYear(individual_correspondents, node1=27, node2=56)
-    print(correspondence_per_year_27_56)
-    print(sum(correspondence_per_year_27_56.values()))
-    print(individual_correspondents)
+    print('correspondence_per_year:', correspondence_per_year)
 
-    #fig, ax = matplotlib.pyplot.subplots()
-    #ax.plot(list(correspondence_per_year_27_56.keys()), list(correspondence_per_year_27_56.values()))
-    #fig, ax = matplotlib.pyplot.subplots()
-    #ax.plot(list(correspondence_per_year_27_53.keys()), list(correspondence_per_year_27_53.values()))
+    letters_in_correspondence = dict()
+    for node, correspondence in correspondence_per_year.items():
+        for year, letters in correspondence.items():
+            if letters != 0:
+                letters_in_correspondence[node] = letters_in_correspondence.get(node, 0) + letters
 
-    #plt.show()
+    print(letters_in_correspondence)
+
+    sort_letters_in_correspondence = sorted(letters_in_correspondence.items(), key=lambda x: x[1], reverse=True)
+
+    print(sort_letters_in_correspondence)
+
+    correspondence_per_year_56 = correspondencePerYear(individual_correspondents, node1=27, node2=56)
+    correspondence_per_year_53 = correspondencePerYear(individual_correspondents, node1=27, node2=53)
+    correspondence_per_year_66 = correspondencePerYear(individual_correspondents, node1=27, node2=66)
+    correspondence_per_year_72 = correspondencePerYear(individual_correspondents, node1=27, node2=72)
+    correspondence_per_year_68 = correspondencePerYear(individual_correspondents, node1=27, node2=68)
+
+    fig, ax = matplotlib.pyplot.subplots()
+    ax.plot(list(correspondence_per_year_56.keys()), list(correspondence_per_year_56.values()), label='Mersenne')
+    ax.plot(list(correspondence_per_year_53.keys()), list(correspondence_per_year_53.values()), label='Constantijn Huygens')
+    ax.plot(list(correspondence_per_year_66.keys()), list(correspondence_per_year_66.values()), label='Elisabeth')
+    ax.plot(list(correspondence_per_year_72.keys()), list(correspondence_per_year_72.values()), label='Regius')
+    ax.plot(list(correspondence_per_year_68.keys()), list(correspondence_per_year_68.values()), label='Picot')
+    plt.title('Descartes: Top 5 Correspondents vs Year')
+    plt.ylabel('Number of letters')
+    plt.xlabel('Year')
+
+    ax.legend()
+
+    non_empty_years = dict()
+    for node, correspondence in correspondence_per_year.items():
+        for year, letters in correspondence.items():
+            if letters != 0:
+                non_empty_years[node] = correspondence_per_year[letters].keys()
+    print(non_empty_years)
+
+
+    plt.show()

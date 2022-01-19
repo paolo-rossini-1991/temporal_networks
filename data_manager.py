@@ -48,7 +48,7 @@ class Edge:
         return str(self.__source) + "-" + str(self.__target)
 
 
-def plotDegree(degree_dict, node):
+def plotDegree(degree_dict, node, correspondents_per_year):
     years = np.array(list(degree_dict.keys()))
 
     individual_degree = dict()
@@ -68,6 +68,7 @@ def plotDegree(degree_dict, node):
     fig, ax = matplotlib.pyplot.subplots()
     ax.bar(list(individual_degree.keys()), sent_letters, label='Sent')
     ax.bar(list(individual_degree.keys()), received_letters, bottom=sent_letters, color='orange', label='Received')
+    ax.plot(list(correspondents_per_year.keys()), list(correspondents_per_year.values()))
     plt.ylabel('Number of letters')
     plt.xlabel('Year')
     plt.title('Descartes: Letters vs Year')
@@ -192,8 +193,6 @@ if __name__ == '__main__':
     labels = labels1 + labels2
     ax1.legend(lines, labels)
 
-    plotDegree(degree_dict=degree_per_year, node=27)
-
     individual_correspondents = individualCorrespondents(edge_list=edge_list, node=27)
     print(individual_correspondents)
 
@@ -206,6 +205,8 @@ if __name__ == '__main__':
         else:
             correspondents_per_year[year]= 0
     print(correspondents_per_year)
+
+    plotDegree(degree_dict=degree_per_year, node=27, correspondents_per_year=correspondents_per_year)
 
     fig, ax = matplotlib.pyplot.subplots()
     ax.plot(list(correspondents_per_year.keys()), list(correspondents_per_year.values()))
@@ -250,12 +251,30 @@ if __name__ == '__main__':
 
     non_empty_years = dict()
     for node, correspondence in correspondence_per_year.items():
+        non_empty_years[node] = list()
         for year, letters in correspondence.items():
-            for l in range(letters):
-                if l != 0:
-                    non_empty_years[node] = year
+            if letters != 0:
+                non_empty_years[node].append(year)
+
+    correspondence_duration = dict()
+    for node, years in non_empty_years.items():
+        if len(years) == 1:
+            correspondence_duration[node] = 1
+        elif len(years) == 0:
+            correspondence_duration[node] = 0
+        else:
+            correspondence_duration[node] = np.array(years).max() - np.array(years).min()
+
+    correspondence_frequency = dict()
+    correspondents_ranking = dict()
+    for node in letters_in_correspondence:
+        correspondence_frequency[node] = float(letters_in_correspondence[node]) / float(correspondence_duration[node])
+        correspondents_ranking[node] = [letters_in_correspondence[node], correspondence_duration[node]]
 
     print(non_empty_years)
+    print(correspondence_duration)
+    print(correspondence_frequency)
+    print(correspondents_ranking)
 
     plt.show()
 

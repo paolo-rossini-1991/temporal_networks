@@ -251,9 +251,12 @@ if __name__ == '__main__':
     non_empty_years = dict()
     for node, correspondence in correspondence_per_year.items():
         for year, letters in correspondence.items():
-            if letters != 0:
-                non_empty_years[node] = correspondence_per_year[letters].keys()
+            for l in range(letters):
+                if l != 0:
+                    non_empty_years[node] = year
+
     print(non_empty_years)
 
-
     plt.show()
+
+

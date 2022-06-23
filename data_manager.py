@@ -1,8 +1,7 @@
-import pandas
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 import os
+import pandas as pd
+
 
 class Edge:
     def __init__(self, a, b, id, year):
@@ -48,7 +47,7 @@ class Edge:
         return str(self.__source) + "-" + str(self.__target)
 
 
-def plotDegree(degree_dict, node, correspondents_per_year):
+def individualDegree(degree_dict, node, correspondents_per_year):
     years = np.array(list(degree_dict.keys()))
 
     individual_degree = dict()
@@ -61,18 +60,8 @@ def plotDegree(degree_dict, node, correspondents_per_year):
         else:
             individual_degree[i] = [0, 0]
 
-    print(individual_degree)
+    return individual_degree
 
-    sent_letters = list([item[0] for item in list(individual_degree.values())])
-    received_letters = list([item[1] for item in list(individual_degree.values())])
-    fig, ax = matplotlib.pyplot.subplots()
-    ax.bar(list(individual_degree.keys()), sent_letters, label='Sent')
-    ax.bar(list(individual_degree.keys()), received_letters, bottom=sent_letters, color='orange', label='Received')
-    ax.plot(list(correspondents_per_year.keys()), list(correspondents_per_year.values()))
-    plt.ylabel('Number of letters')
-    plt.xlabel('Year')
-    plt.title('Descartes: Letters vs Year')
-    ax.legend()
 
 def individualCorrespondents(edge_list, node):
     '''
@@ -119,7 +108,7 @@ if __name__ == '__main__':
     cwd = os.getcwd()
 
     # read csv using pandas
-    df = pandas.read_csv(cwd + '/data/Edges_Dynamic_Gephi.csv', sep=';')
+    df = pd.read_csv(cwd + '/data/Edges_Dynamic_Gephi.csv', sep=';')
 
     #### edges per year ####
     # extract 'years' vector from csv. the vector has n elements with n being the number of edges.
@@ -177,24 +166,8 @@ if __name__ == '__main__':
         if year in degree_per_year:
             nodes_per_year[year] = len(degree_per_year[year])
         else:
-            nodes_per_year[year] = 0
+           nodes_per_year[year] = 0
 
-    fig, ax1 = matplotlib.pyplot.subplots()
-    ax1.plot(list(nodes_per_year.keys()), list(nodes_per_year.values()), label='Nodes')
-    ax1.set_ylabel('Nodes')
-    ax2 = ax1.twinx()
-    ax2.plot(list(edges_per_year.keys()), list(edges_per_year.values()), color='orange', label='Edges')
-    ax2.set_ylabel('Edges')
-    ax1.set_xlabel('Year')
-    plt.title('Nodes and Edges vs Year')
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    lines= lines1 + lines2
-    labels = labels1 + labels2
-    ax1.legend(lines, labels)
-
-    individual_correspondents = individualCorrespondents(edge_list=edge_list, node=27)
-    print(individual_correspondents)
 
     correspondents_per_year = dict()
     for year in range(years.min(), years.max()+1):
@@ -204,78 +177,17 @@ if __name__ == '__main__':
                 correspondents_per_year[year] += 1
         else:
             correspondents_per_year[year]= 0
-    print(correspondents_per_year)
 
-    plotDegree(degree_dict=degree_per_year, node=27, correspondents_per_year=correspondents_per_year)
+    individual_degree = individualDegree(degree_dict=degree_per_year, node=27,
+                                         correspondents_per_year=correspondents_per_year)
+    individual_correspondents = individualCorrespondents(edge_list=edge_list, node=27)
 
-    fig, ax = matplotlib.pyplot.subplots()
-    ax.plot(list(correspondents_per_year.keys()), list(correspondents_per_year.values()))
+    correspondence_per_year_27_53 = correspondencePerYear(individual_correspondents, node1=27, node2=53)
 
-    correspondence_per_year = dict()
-    for year, node in degree_per_year.items():
-        for key in node:
-            if key != 27:
-                correspondence_per_year[key] = correspondencePerYear(individual_correspondents, node1=27, node2=key)
-
-    print('correspondence_per_year:', correspondence_per_year)
-
-    letters_in_correspondence = dict()
-    for node, correspondence in correspondence_per_year.items():
-        for year, letters in correspondence.items():
-            if letters != 0:
-                letters_in_correspondence[node] = letters_in_correspondence.get(node, 0) + letters
-
-    print(letters_in_correspondence)
-
-    sort_letters_in_correspondence = sorted(letters_in_correspondence.items(), key=lambda x: x[1], reverse=True)
-
-    print(sort_letters_in_correspondence)
-
-    correspondence_per_year_56 = correspondencePerYear(individual_correspondents, node1=27, node2=56)
-    correspondence_per_year_53 = correspondencePerYear(individual_correspondents, node1=27, node2=53)
-    correspondence_per_year_66 = correspondencePerYear(individual_correspondents, node1=27, node2=66)
-    correspondence_per_year_72 = correspondencePerYear(individual_correspondents, node1=27, node2=72)
-    correspondence_per_year_68 = correspondencePerYear(individual_correspondents, node1=27, node2=68)
-
-    fig, ax = matplotlib.pyplot.subplots()
-    ax.plot(list(correspondence_per_year_56.keys()), list(correspondence_per_year_56.values()), label='Mersenne')
-    ax.plot(list(correspondence_per_year_53.keys()), list(correspondence_per_year_53.values()), label='Constantijn Huygens')
-    ax.plot(list(correspondence_per_year_66.keys()), list(correspondence_per_year_66.values()), label='Elisabeth')
-    ax.plot(list(correspondence_per_year_72.keys()), list(correspondence_per_year_72.values()), label='Regius')
-    ax.plot(list(correspondence_per_year_68.keys()), list(correspondence_per_year_68.values()), label='Picot')
-    plt.title('Descartes: Top 5 Correspondents vs Year')
-    plt.ylabel('Number of letters')
-    plt.xlabel('Year')
-
-    ax.legend()
-
-    non_empty_years = dict()
-    for node, correspondence in correspondence_per_year.items():
-        non_empty_years[node] = list()
-        for year, letters in correspondence.items():
-            if letters != 0:
-                non_empty_years[node].append(year)
-
-    correspondence_duration = dict()
-    for node, years in non_empty_years.items():
-        if len(years) == 1:
-            correspondence_duration[node] = 1
-        elif len(years) == 0:
-            correspondence_duration[node] = 0
-        else:
-            correspondence_duration[node] = np.array(years).max() - np.array(years).min()
-
-    correspondence_frequency = dict()
-    correspondents_ranking = dict()
-    for node in letters_in_correspondence:
-        correspondence_frequency[node] = float(letters_in_correspondence[node]) / float(correspondence_duration[node])
-        correspondents_ranking[node] = [letters_in_correspondence[node], correspondence_duration[node]]
-
-    print(non_empty_years)
-    print(correspondence_duration)
-    print(correspondence_frequency)
-    print(correspondents_ranking)
-
-    plt.show()
+    print(individual_correspondents)
+    print(individual_degree)
+    print(correspondence_per_year_27_53)
+    print(nodes_per_year)
+    print(edges_per_year)
 
 
